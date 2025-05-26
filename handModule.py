@@ -300,11 +300,11 @@ class HandDetector():
                 b = -1
 
                 if fin_y >= (height/width) * fin_x:
-                    a = 1;
+                    a = 1
                 else:
                     a = 0
                 if fin_y >= -(height/width) * fin_x:
-                    b = 1;
+                    b = 1
                 else:
                     b = 0
 

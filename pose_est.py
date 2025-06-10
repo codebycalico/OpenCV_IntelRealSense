@@ -34,9 +34,11 @@ while cap.isOpened():
         
     # find the x, y coordinates for whatever specific landmark you want to track
     if results.pose_landmarks != None:
-        print("Right Thumb:")
-        x = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_THUMB].x * frame.shape[1])
-        y = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_THUMB].y * frame.shape[0])
+        #print("Right Thumb:")
+        #x = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_THUMB].x * frame.shape[1])
+        #y = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_THUMB].y * frame.shape[0])
+        x = int(results.pose_landmarks.landmark[0].x * frame.shape[1])
+        y = int(results.pose_landmarks.landmark[0].y * frame.shape[0])
         print(x,y)
 
     # show the final output

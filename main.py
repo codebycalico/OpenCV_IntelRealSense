@@ -7,59 +7,58 @@ import pygame
 import sys
 import math
 import random
-
 import cv2
 import mediapipe as mp
 
 # initialize Pose estimator / detector
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
-
 pose = mp_pose.Pose(
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5)
 
-# create capture object
+# create capture object (video feed)
 cap = cv2.VideoCapture(0)
 
+# initialize Pygame
 pygame.init()
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Images Follow Mouse While Button Held")
+pygame.display.set_caption("Microbes Float And Follow Body When Detected")
 
-# === CONFIG ===
-image_files = ["images/microbe-1.png", "images/microbe-2.png", "images/microbe-3.png"]  # Replace with your image file paths
-base_size = 80
-float_amplitude = 5
+# Image / Sprite configuration
+# If problem with images loading, check the file path for the images
+image_files = ["images/microbe-1.png", "images/microbe-2.png", "images/microbe-3.png"]
+base_size = 100
 move_speed = 3
+# how much random movement to add
+jitter_strength = 3
 
-# === LOAD IMAGES & CREATE SPRITES ===
+# Load images and create array of sprites from images
 sprites = []
+# loop through images loaded into array and set them up as sprites
 for img_file in image_files:
     original_image = pygame.image.load(img_file).convert_alpha()
+    # scale down the size
     scaled_image = pygame.transform.smoothscale(original_image, (base_size, base_size))
-    rect = scaled_image.get_rect(
+    # rect is the position that the sprite is on the screen at any given time
+    # topleft is the starting position
+    rect = original_image.get_rect(
         topleft=(random.randint(0, WIDTH - base_size), random.randint(0, HEIGHT - base_size))
     )
     
+    # sprite class
     sprite = {
         "image": scaled_image,
-        "original": scaled_image,
         "rect": rect,
         "pos": [float(rect.x), float(rect.y)],
-        "speed": [random.choice([-3, 3]), random.choice([-3, 3])],
-        "float_time": random.uniform(0, 10)
+        "speed": [random.choice([-3, 3]), random.choice([-3, 3])]
     }
     sprites.append(sprite)
 
-clock = pygame.time.Clock()
-mouse_held = False
-
-# === MAIN LOOP ===
+# main loop 
 running = True
 while running:
-    dt = clock.tick(60) / 1000  # Delta time in seconds
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -79,49 +78,53 @@ while running:
     mp_drawing.draw_landmarks(
         frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
+    #continuously draw a black background
     screen.fill((0, 0, 0))
 
+    # loop through each sprite to move it around the screen
     for sprite in sprites:
         pos_x, pos_y = sprite["pos"]
         speed_x, speed_y = sprite["speed"]
-        sprite["float_time"] += dt
 
+        # if we have detected a body
         if results.pose_landmarks != None:
-            ped_x = int(results.pose_landmarks.landmark[0].x * frame.shape[1])
-            ped_y = int(results.pose_landmarks.landmark[0].y * frame.shape[0])
-            # Move smoothly toward the mouse
-            target_x, target_y = ped_x, ped_y
-            dir_x = target_x - pos_x
-            dir_y = target_y - pos_y
+            body_x = int(results.pose_landmarks.landmark[0].x * frame.shape[1])
+            body_y = int(results.pose_landmarks.landmark[0].y * frame.shape[0])
+            # Move smoothly toward the tracked person
+            dir_x = body_x - pos_x
+            dir_y = body_y - pos_y
             dist = math.hypot(dir_x, dir_y)
 
             if dist != 0:
                 dir_x /= dist
                 dir_y /= dist
-                move_x = dir_x * min(move_speed, dist)
-                move_y = dir_y * min(move_speed, dist)
-                pos_x += move_x
-                pos_y += move_y
+                pos_x += dir_x * move_speed
+                pos_y += dir_y * move_speed
+
+        #if we haven't detected a body
         else:
-            # Bounce and float
-            float_offset = float_amplitude * math.sin(sprite["float_time"] * 3)
+             # Move around and add random jitter to movement
+            jitter_x = random.uniform(-jitter_strength, jitter_strength)
+            jitter_y = random.uniform(-jitter_strength, jitter_strength)
 
-            pos_x += speed_x
-            pos_y += speed_y
+            pos_x += speed_x + jitter_x
+            pos_y += speed_y + jitter_y
 
-            # Bounce off edges
-            if pos_x < 0 or pos_x + base_size > WIDTH:
+            # Turn around and come back on screen if they go off screen
+            if pos_x < -150 or pos_x + base_size > (WIDTH + 150):
                 sprite["speed"][0] *= -1
-            if pos_y + float_offset < 0 or pos_y + base_size + float_offset > HEIGHT:
+            if pos_y < -150 or pos_y + base_size > (HEIGHT + 150):
                 sprite["speed"][1] *= -1
-
-            pos_y += float_offset
 
         # Update sprite position and draw
         sprite["pos"] = [pos_x, pos_y]
         sprite["rect"].topleft = (int(pos_x), int(pos_y))
+        # move the image to the new location
         screen.blit(sprite["image"], sprite["rect"])
 
+    # shows everything, essentially like FastLED.show()
+    # prevents flickering as it loads everything
+    # and then shows it all at once
     pygame.display.flip()
 
 pygame.quit()

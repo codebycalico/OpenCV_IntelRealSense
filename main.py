@@ -66,13 +66,12 @@ while running:
     # read frame from capture object
     _, frame = cap.read()
 
-    # convert the frame to RGB format
+    # convert the frame to RGB format & flip horizaontally
     RGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    frame = cv2.flip(frame, 0)
 
     # process the RGB frame to get the result
     results = pose.process(RGB)
-
-    #print(results.pose_landmarks)
 
     # draw detected skeleton on the frame
     mp_drawing.draw_landmarks(

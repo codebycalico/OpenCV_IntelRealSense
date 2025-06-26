@@ -1,3 +1,6 @@
+# Tracking skeleton and exporting live feed to Unity
+# https://www.youtube.com/watch?v=icS2yforZpw
+
 # import the necessary packages
 from imutils.video import VideoStream
 from imutils.video import FPS

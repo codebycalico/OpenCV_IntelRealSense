@@ -2,6 +2,11 @@
 # that tracks pedestrians and microbes stick
 # as they pass
 # Calico Rose Randall
+# Human Pose Estimation with OpenCV
+# https://techvidvan.com/tutorials/human-pose-estimation-opencv/
+# https://github.com/verma-ananya/HumanBody-Skeleton-Detection-using-OpenCV
+# Pose landmark detection guide
+# https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker
 
 import pygame
 import sys
